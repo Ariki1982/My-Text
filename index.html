@@ -2,80 +2,181 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>الأذكار</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#f6f1e7; --ink:#2a2118; --accent:#7a4b2a; --card:#fffdf8; }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg:#17130f; --ink:#efe6d6; --accent:#d9a46b; --card:#201a14; }
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; background: var(--bg); color: var(--ink);
-    font-family: 'Amiri Quran', 'Amiri', 'Traditional Arabic', serif;
-    display: flex; justify-content: center; padding: 24px 16px;
-  }
-  main {
-    width: 100%; max-width: 640px; background: var(--card);
-    border-radius: 14px; padding: 24px;
-    border-inline-start: 5px solid var(--accent);
-  }
-  .bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
-  .bar .sp { flex:1; }
-  button {
-    font-family: inherit; font-size: 1.1rem; padding: 4px 14px;
-    background: none; color: var(--accent); border: 1px solid var(--accent);
-    border-radius: 8px; cursor: pointer;
-  }
-  button.on { background: var(--accent); color: var(--card); }
-  #text { font-size: 1.5rem; line-height: 2.2; white-space: pre-wrap; margin: 0; }
+:root{--bg:#f4efe4;--card:#fffdf7;--ink:#2b2418;--mut:#8a7d68;--acc:#0f766e;--gold:#c0913f;--line:#e8dfcb;--on:#fff;--sh:0 6px 24px rgba(60,40,10,.08);--fs:1}
+[data-theme=dark]{--bg:#0e1514;--card:#16201f;--ink:#ece4d2;--mut:#93a39d;--acc:#2dd4bf;--gold:#e0b25c;--line:#243230;--on:#06201d;--sh:0 6px 24px rgba(0,0,0,.4)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Cairo,system-ui,sans-serif}
+.wrap{max-width:720px;margin:auto;padding:0 14px 60px}
+.hero{background:var(--hg,#0f766e);color:#fff;padding:calc(env(safe-area-inset-top,0px) + 14px) 20px 26px;border-radius:0 0 36px 36px;box-shadow:var(--sh);position:relative;overflow:hidden;max-width:720px;margin:auto}
+.hero:before{content:"";position:absolute;width:240px;height:240px;border-radius:50%;background:rgba(255,255,255,.08);left:-60px;bottom:-90px}
+.top{display:flex;justify-content:space-between;align-items:center;position:relative}
+.ib{background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:12px;width:40px;height:40px;font-size:1.1rem;cursor:pointer}
+.bsm{font-family:'Amiri Quran',serif;font-size:1.7rem}
+.gr{text-align:center;margin-top:6px;font-weight:600;opacity:.9;position:relative}
+.clock{font-size:3.2rem;font-weight:800;text-align:center;line-height:1.2;position:relative}
+.clock small{font-size:1.2rem;font-weight:600;opacity:.85;margin-inline-start:4px}
+.dates{text-align:center;position:relative;margin-top:6px}
+.dates b{display:block;font-size:1.1rem}
+.dates span{font-size:.9rem;opacity:.85}
+.tabs{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;gap:8px;overflow-x:auto;padding:14px 2px 10px;scrollbar-width:none}
+.tab{flex:none;font:600 .95rem Cairo;padding:8px 18px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.tab.on{background:var(--acc);color:var(--on);border-color:var(--acc)}
+.bar{height:8px;background:var(--line);border-radius:9px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--acc),var(--gold));transition:width .4s}
+.meta{display:flex;justify-content:space-between;align-items:center;margin:8px 2px 16px;font-size:.85rem;color:var(--mut)}
+.tools button{font:600 .85rem Cairo;background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:4px 10px;margin-inline-start:6px;cursor:pointer}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px 18px 12px;margin-bottom:14px;box-shadow:var(--sh);transition:opacity .3s}
+.card.done{opacity:.5}
+.t{font-family:'Amiri Quran',serif;font-size:calc(var(--fs)*1.4rem);line-height:2.2;white-space:pre-wrap;margin:0 0 12px}
+.row{display:flex;align-items:center;gap:10px;border-top:1px dashed var(--line);padding-top:10px}
+.cp{background:none;border:0;color:var(--mut);font:600 .85rem Cairo;cursor:pointer}
+.lb{flex:1;text-align:center;color:var(--gold);font-weight:600;font-size:.9rem}
+.ctr{min-width:70px;height:44px;border-radius:22px;border:0;background:linear-gradient(135deg,var(--acc),var(--gold));color:var(--on);font:800 1.15rem Cairo;cursor:pointer}
+.card.done .ctr{background:var(--line);color:var(--mut)}
+.fin{display:none;text-align:center;padding:16px;border-radius:20px;background:linear-gradient(135deg,var(--acc),var(--gold));color:var(--on);font-weight:700;margin-bottom:14px}
+.fin.show{display:block}
+.msg{text-align:center;color:var(--mut);padding:40px 10px}
+footer{text-align:center;color:var(--mut);font-size:.8rem;margin-top:28px}
+.sig{display:block;direction:ltr;font-size:1.35rem;line-height:1.6;margin-top:10px;background:linear-gradient(90deg,var(--acc),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:600}
+.orn{color:var(--gold);letter-spacing:6px;margin-top:6px;display:block}
 </style>
 </head>
 <body>
-<main>
-  <div class="bar" id="tabs"></div>
-  <p id="text">جاري التحميل...</p>
-</main>
+<header class="hero">
+  <div class="top">
+    <button class="ib" id="th" aria-label="الوضع">🌙</button>
+    <span class="bsm">﷽</span>
+    <button class="ib" id="rf" aria-label="تحديث">↻</button>
+  </div>
+  <div class="gr" id="gr"></div>
+  <div class="clock" id="clk"></div>
+  <div class="dates"><b id="hj"></b><span id="gg"></span></div>
+</header>
+<div class="wrap">
+  <nav class="tabs" id="tabs"></nav>
+  <div class="bar"><i id="pb"></i></div>
+  <div class="meta"><span id="pt"></span>
+    <span class="tools"><button id="fp">أ+</button><button id="fm">أ−</button><button id="rs">إعادة العدّ</button></span></div>
+  <div class="fin" id="fin">تقبّل الله طاعتك 🤍</div>
+  <main id="list"></main>
+  <footer>أي ملف .txt تضيفه إلى المستودع يظهر هنا تلقائياً<span class="orn">❖ ❖ ❖</span><span class="sig">𝓓𝓻.𝓐𝓫𝓭𝓾𝓵𝔀𝓪𝓱𝓪𝓫 𝓜𝓸𝓱𝓪𝓶𝓶𝓮𝓭 𝓐𝓫𝓭𝓾𝓵𝓵𝓪𝓱 𝓐𝓵_𝓐𝓻𝓮𝓺𝓲</span></footer>
+</div>
 <script>
-  // عدّل الأسماء وأسماء الملفات هنا
-  const FILES = [
-    { title: 'أذكار الصباح', file: 'morning.txt' },
-    { title: 'أذكار المساء', file: 'evening.txt' }
-  ];
+// إعدادات: ضع اسم مجلد إذا كانت ملفات النصوص داخل مجلد (اتركه فارغاً للمجلد الرئيسي)
+const CFG={folder:'',fallback:['morning.txt','evening.txt']};
+const $=s=>document.querySelector(s);
+const S={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+const CNT=/([0-9])\uFE0F?\u20E3|🔟|💯/gu;
+const base=CFG.folder?CFG.folder.replace(/\/$/,'')+'/':'';
 
-  const tabs = document.getElementById('tabs');
-  const box  = document.getElementById('text');
-  let size = 1.5;
+/* الثيم وحجم الخط */
+let theme=S.get('adhkar:theme',matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+let fs=S.get('adhkar:fs',1);
+function applyUI(){document.documentElement.dataset.theme=theme;$('#th').textContent=theme==='dark'?'☀️':'🌙';document.documentElement.style.setProperty('--fs',fs)}
+$('#th').onclick=()=>{theme=theme==='dark'?'light':'dark';S.set('adhkar:theme',theme);applyUI()};
+$('#fp').onclick=()=>{fs=Math.min(1.6,fs+.1);S.set('adhkar:fs',fs);applyUI()};
+$('#fm').onclick=()=>{fs=Math.max(.8,fs-.1);S.set('adhkar:fs',fs);applyUI()};
+applyUI();
 
-  FILES.forEach((f, i) => {
-    const b = document.createElement('button');
-    b.textContent = f.title;
-    b.onclick = () => show(i);
-    tabs.appendChild(b);
+/* الساعة والتاريخ */
+const F={t:new Intl.DateTimeFormat('ar-SA-u-nu-latn',{hour:'numeric',minute:'2-digit',second:'2-digit',hour12:true}),
+ h:new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-latn',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),
+ g:new Intl.DateTimeFormat('ar-SA-u-ca-gregory-nu-latn',{day:'numeric',month:'long',year:'numeric'})};
+const G=[[0,5,'#0b132b','#1c2d5a'],[5,7,'#2b3a67','#c86b85'],[7,11,'#0f766e','#3aa9a0'],[11,15,'#1d6fa5','#4fb3d9'],[15,18,'#b45f06','#d9954a'],[18,20,'#7b2d5b','#d4695a'],[20,24,'#0b132b','#1c2d5a']];
+function tick(){
+  const d=new Date(),h=d.getHours(),p={};
+  F.t.formatToParts(d).forEach(x=>p[x.type]=x.value);
+  $('#clk').innerHTML=`${p.hour}:${p.minute}<small>:${p.second}</small><small>${p.dayPeriod||''}</small>`;
+  $('#hj').textContent='🌙 '+F.h.format(d);
+  $('#gg').textContent='📅 '+F.g.format(d)+' م';
+  const g=G.find(x=>h>=x[0]&&h<x[1]);
+  document.documentElement.style.setProperty('--hg',`linear-gradient(160deg,${g[2]},${g[3]})`);
+  $('#gr').textContent=h<5||h>=20?'ليلة طيبة':h<12?'صباح الخير':h<18?'طاب يومك':'مساء الخير';
+}
+tick();setInterval(tick,1000);
+
+/* قراءة قائمة الملفات من المستودع تلقائياً */
+function repoInfo(){const h=location.hostname;if(!h.endsWith('.github.io'))return null;const o=h.split('.')[0];return{o,r:location.pathname.split('/')[1]||h}}
+async function listFiles(){
+  const ri=repoInfo();
+  if(ri){try{
+    const r=await fetch(`https://api.github.com/repos/${ri.o}/${ri.r}/contents/${CFG.folder}`);
+    if(r.ok){const j=await r.json();
+      const l=j.filter(x=>x.type==='file'&&/\.txt$/i.test(x.name)).map(x=>({name:x.name,url:x.download_url}));
+      if(l.length){S.set('adhkar:list',l);return l.sort((a,b)=>a.name.localeCompare(b.name))}}
+  }catch{}}
+  try{const r=await fetch(base+'files.json');if(r.ok)return(await r.json()).map(n=>({name:n,url:base+n+'?v='+Date.now()}))}catch{}
+  return S.get('adhkar:list',CFG.fallback.map(n=>({name:n,url:base+n+'?v='+Date.now()})));
+}
+
+/* تحليل النص إلى بطاقات */
+const nice=n=>n.replace(/\.txt$/i,'').replace(/^\d+[-_.\s]*/,'').replace(/[-_]+/g,' ');
+function parse(f,txt){
+  txt=txt.replace(/[\u200e\u200f\ufeff]/g,'').replace(/\r/g,'');
+  const lines=txt.split('\n');const i=lines.findIndex(l=>l.trim());
+  let title=nice(f.name);
+  if(i>=0){const t=lines[i].replace(/ـ/g,'').trim(),nx=(lines[i+1]||'').trim();
+    if(t.length<=40&&!/💯|\u20E3/.test(t)&&(!nx||nx[0]==='-')){title=t;lines.splice(i,1)}}
+  const cards=lines.join('\n').split(/\n\s*\n/).map(b=>b.trim()).filter(b=>!/^[\s\-–—*_🌿💯]*$/u.test(b)).map(b=>{
+    let n=1;
+    if(/💯/u.test(b))n=100;
+    else{const m=[...b.matchAll(CNT)];if(m.length){const l=m[m.length-1];n=l[0]==='🔟'?10:+l[1]}}
+    const t=b.replace(CNT,'').replace(/^[\s\-–—]+/,'').replace(/[ \t]+\n/g,'\n').trim();
+    return{t,n:n||1};
+  }).filter(c=>c.t);
+  return{title,slug:f.name.replace(/\.txt$/i,'').toLowerCase(),cards};
+}
+async function loadDoc(f){try{const r=await fetch(f.url);if(!r.ok)throw 0;return parse(f,await r.text())}catch{return null}}
+
+/* العرض */
+let docs=[],cur=0,st=[],key='';
+const dayKey=()=>{const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
+function build(){const t=$('#tabs');t.textContent='';docs.forEach((d,i)=>{const b=document.createElement('button');b.className='tab';b.textContent=d.title;b.onclick=()=>show(i);t.append(b)})}
+function prog(){
+  const c=docs[cur].cards,done=c.filter((_,k)=>st[k]===0).length;
+  $('#pb').style.width=(c.length?done/c.length*100:0)+'%';
+  $('#pt').textContent=`${done} / ${c.length} أنجزت`;
+  $('#fin').classList.toggle('show',c.length>0&&done===c.length);
+}
+function show(i){
+  cur=i;const d=docs[i];history.replaceState(null,'','#'+d.slug);
+  document.querySelectorAll('.tab').forEach((b,k)=>b.classList.toggle('on',k===i));
+  key=`adhkar:${dayKey()}:${d.slug}`;st=S.get(key,[]);
+  d.cards.forEach((c,k)=>{if(typeof st[k]!=='number'||st[k]>c.n)st[k]=c.n});
+  const box=$('#list');box.textContent='';
+  d.cards.forEach((c,k)=>{
+    const a=document.createElement('article'),p=document.createElement('p'),row=document.createElement('div'),
+      cp=document.createElement('button'),lb=document.createElement('span'),b=document.createElement('button');
+    a.className='card';p.className='t';p.textContent=c.t;row.className='row';
+    cp.className='cp';cp.textContent='نسخ';
+    cp.onclick=async()=>{try{await navigator.clipboard.writeText(c.t);cp.textContent='تم النسخ ✓';setTimeout(()=>cp.textContent='نسخ',1500)}catch{}};
+    lb.className='lb';lb.textContent=c.n>1?`التكرار ×${c.n}`:'';
+    b.className='ctr';
+    const upd=()=>{a.classList.toggle('done',st[k]===0);b.textContent=st[k]===0?'✓':st[k]};
+    b.onclick=()=>{st[k]=st[k]===0?c.n:st[k]-1;if(st[k]===0&&navigator.vibrate)navigator.vibrate(40);S.set(key,st);upd();prog()};
+    upd();row.append(cp,lb,b);a.append(p,row);box.append(a);
   });
-
-  const sp = document.createElement('span'); sp.className = 'sp'; tabs.appendChild(sp);
-  [['أ+', 1], ['أ−', -1]].forEach(([t, d]) => {
-    const b = document.createElement('button');
-    b.textContent = t;
-    b.onclick = () => { size = Math.min(2.4, Math.max(1.1, size + d * 0.15)); box.style.fontSize = size + 'rem'; };
-    tabs.appendChild(b);
-  });
-
-  function show(i) {
-    [...tabs.querySelectorAll('button')].forEach((b, k) => b.classList.toggle('on', k === i));
-    box.textContent = 'جاري التحميل...';
-    fetch(FILES[i].file + '?v=' + Date.now())
-      .then(r => { if (!r.ok) throw 0; return r.text(); })
-      .then(t => box.textContent = t)
-      .catch(() => box.textContent = 'تعذر تحميل ' + FILES[i].file);
-    history.replaceState(null, '', '#' + (i + 1));
-  }
-
-  show((parseInt(location.hash.slice(1)) || 1) - 1);
+  prog();
+}
+$('#rs').onclick=()=>{if(!docs.length)return;st=docs[cur].cards.map(c=>c.n);S.set(key,st);show(cur)};
+async function init(){
+  $('#list').innerHTML='<p class="msg">جاري التحميل…</p>';
+  docs=(await Promise.all((await listFiles()).map(loadDoc))).filter(Boolean);
+  if(!docs.length){$('#list').innerHTML='<p class="msg">لا توجد ملفات نصية (.txt) في المستودع.</p>';return}
+  build();
+  const h=decodeURIComponent(location.hash.slice(1));
+  let i=docs.findIndex(d=>d.slug===h);
+  if(i<0){const re=new Date().getHours()<15?/صباح|morning/i:/مساء|evening/i;i=docs.findIndex(d=>re.test(d.title+d.slug));if(i<0)i=0}
+  show(i);
+}
+$('#rf').onclick=init;
+init();
 </script>
 </body>
 </html>
