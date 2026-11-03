@@ -77,13 +77,13 @@ body.sc .up{opacity:1;pointer-events:auto}
   <div class="meta"><span id="pt"></span>
     <span class="tools"><button id="au" title="انتقال تلقائي للذكر التالي">⏭</button><button id="wk" title="إبقاء الشاشة مضيئة">🔆</button><button id="fp">أ+</button><button id="fm">أ−</button><button id="rs">↺ إعادة</button></span></div>
   <div class="fin" id="fin">تقبّل الله طاعتك 🤍</div>
-  <main id="list"></main>
+  <main id="list"><p class="msg">جاري التحميل…</p></main>
   <footer><span class="orn">❖ ❖ ❖</span><span class="sig">𝓓𝓻.𝓐𝓫𝓭𝓾𝓵𝔀𝓪𝓱𝓪𝓫 𝓜𝓸𝓱𝓪𝓶𝓶𝓮𝓭 𝓐𝓫𝓭𝓾𝓵𝓵𝓪𝓱 𝓐𝓵_𝓐𝓻𝓮𝓺𝓲</span></footer>
 </div>
 <button class="up" id="up" aria-label="للأعلى">↑</button>
 <script>
 ‎// إعدادات: ضع اسم مجلد إذا كانت ملفات النصوص داخل مجلد (اتركه فارغاً للمجلد الرئيسي)
-const CFG={folder:'',fallback:['morning.txt','evening.txt']};
+const CFG={owner:'',repo:'',folder:'',fallback:['morning.txt','evening.txt']};
 addEventListener('error',e=>{const l=document.getElementById('list');if(l)l.innerHTML='<p class="msg">⚠️ حدث خطأ: '+String(e.message||'').slice(0,120)+'</p>'});
 const $=s=>document.querySelector(s);
 const S={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
@@ -121,17 +121,26 @@ function tick(){try{
 tick();setInterval(tick,1000);
 
 ‎/* قراءة قائمة الملفات من المستودع تلقائياً */
-function repoInfo(){const h=location.hostname;if(!h.endsWith('.github.io'))return null;const o=h.split('.')[0];return{o,r:location.pathname.split('/')[1]||h}}
+function repoInfo(){if(CFG.owner&&CFG.repo)return{o:CFG.owner,r:CFG.repo};const h=location.hostname;if(!h.endsWith('.github.io'))return null;const o=h.split('.')[0];return{o,r:location.pathname.split('/')[1]||h}}
+const dbg=[];
+const sortL=l=>l.sort((a,b)=>a.name.localeCompare(b.name));
 async function listFiles(){
   const ri=repoInfo();
-  if(ri){try{
-    const r=await fetch(`https://api.github.com/repos/${ri.o}/${ri.r}/contents/${CFG.folder}`);
-    if(r.ok){const j=await r.json();
-      const l=j.filter(x=>x.type==='file'&&/\.txt$/i.test(x.name)).map(x=>({name:x.name,url:x.download_url}));
-      if(l.length){S.set('adhkar:list',l);return l.sort((a,b)=>a.name.localeCompare(b.name))}}
-  }catch{}}
+  if(ri){
+    try{
+      const r=await fetch(`https://api.github.com/repos/${ri.o}/${ri.r}/git/trees/HEAD?recursive=1`);
+      dbg.push('GitHub '+r.status);
+      if(r.ok){
+        const j=await r.json(),pre=CFG.folder?CFG.folder.replace(/\/$/,'')+'/':'';
+        const l=(j.tree||[]).filter(x=>x.type==='blob'&&x.path.startsWith(pre)&&/\.txt$/i.test(x.path)&&!/(^|\/)(readme|license|robots|cname)[^\/]*$/i.test(x.path))
+          .map(x=>{const rel=x.path.split('/').map(encodeURIComponent).join('/');return{name:x.path.split('/').pop(),rel,url:`https://raw.githubusercontent.com/${ri.o}/${ri.r}/HEAD/${rel}`}});
+        if(l.length){S.set('adhkar:list',l);return sortL(l)}
+        dbg.push('لا توجد ملفات txt في المستودع');
+      }
+    }catch(e){dbg.push('تعذر الاتصال بـ GitHub')}
+  }else dbg.push('الرابط ليس github.io');
   try{const r=await fetch(base+'files.json');if(r.ok)return(await r.json()).map(n=>({name:n,url:base+n+'?v='+Date.now()}))}catch{}
-  return S.get('adhkar:list',CFG.fallback.map(n=>({name:n,url:base+n+'?v='+Date.now()})));
+  return S.get('adhkar:list',null)||CFG.fallback.map(n=>({name:n,url:base+n+'?v='+Date.now()}));
 }
 
 ‎/* تحليل النص إلى بطاقات */
@@ -151,8 +160,14 @@ function parse(f,txt){
   }).filter(c=>c.t);
   return{title,slug:f.name.replace(/\.txt$/i,'').toLowerCase(),cards};
 }
-async function loadDoc(f){const ck='adhkar:txt:'+f.name;let t=null;try{const r=await fetch(f.url);if(r.ok){t=await r.text();S.set(ck,t)}}catch{}
-  if(t==null)t=S.get(ck,null);return t==null?null:parse(f,t)}
+async function loadDoc(f){
+  const ck='adhkar:txt:'+f.name;let t=null;
+  for(const u of [f.url,f.rel].filter(Boolean)){
+    try{const r=await fetch(u);if(r.ok){t=await r.text();S.set(ck,t);break}dbg.push(f.name+' '+r.status)}catch(e){dbg.push(f.name+' تعذر التحميل')}
+  }
+  if(t==null)t=S.get(ck,null);
+  return t==null?null:parse(f,t);
+}
 
 ‎/* العرض */
 let docs=[],cur=0,st=[],key='',els=[],au=S.get('adhkar:au',true),wl=null;
@@ -193,7 +208,7 @@ $('#rs').onclick=()=>{if(!docs.length)return;st=docs[cur].cards.map(c=>c.n);S.se
 async function init(){
   $('#list').innerHTML='<p class="msg">جاري التحميل…</p>';
   docs=(await Promise.all((await listFiles()).map(loadDoc))).filter(Boolean);
-  if(!docs.length){$('#list').innerHTML='<p class="msg">لا توجد ملفات نصية (.txt) في المستودع.</p>';return}
+  if(!docs.length){const m=document.createElement('p');m.className='msg';m.textContent='لم أجد أي نص. تأكد أن ملفات .txt مرفوعة في المستودع. ('+dbg.join(' · ')+')';$('#list').textContent='';$('#list').append(m);return}
   build();
   const h=decodeURIComponent(location.hash.slice(1));
   let i=docs.findIndex(d=>d.slug===h);
