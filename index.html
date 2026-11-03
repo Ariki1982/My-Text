@@ -45,9 +45,22 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:Cairo,system-ui,
 footer{text-align:center;color:var(--mut);font-size:.8rem;margin-top:28px}
 .sig{display:block;direction:ltr;font-size:1.35rem;line-height:1.6;margin-top:10px;background:linear-gradient(90deg,var(--acc),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:600}
 .orn{color:var(--gold);letter-spacing:6px;margin-top:6px;display:block}
+.mini{position:fixed;top:0;left:0;right:0;margin:auto;max-width:720px;height:calc(env(safe-area-inset-top,0px) + 52px);padding:env(safe-area-inset-top,0px) 16px 0;z-index:20;display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--hg,#0f766e);color:#fff;border-radius:0 0 18px 18px;box-shadow:var(--sh);transform:translateY(-115%);transition:transform .3s}
+body.sc .mini{transform:none}
+.mini b{font-size:1.05rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc{flex:none;text-align:end;line-height:1.3;font-weight:800;font-size:1.05rem}
+.mc small{font-weight:600;opacity:.85;font-size:.75rem}
+.mc em{display:block;font-style:normal;font-weight:600;font-size:.72rem;opacity:.9}
+.tabs{transition:top .3s}
+body.sc .tabs{top:calc(env(safe-area-inset-top,0px) + 52px)}
+.tools button.on{background:var(--acc);color:var(--on);border-color:var(--acc)}
+.up{position:fixed;left:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);width:44px;height:44px;border-radius:50%;border:0;background:var(--acc);color:var(--on);font-size:1.3rem;box-shadow:var(--sh);cursor:pointer;opacity:0;pointer-events:none;transition:opacity .3s}
+body.sc .up{opacity:1;pointer-events:auto}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
+<div class="mini"><b id="mt"></b><span class="mc" id="mc"></span></div>
 <header class="hero">
   <div class="top">
     <button class="ib" id="th" aria-label="الوضع">🌙</button>
@@ -62,20 +75,21 @@ footer{text-align:center;color:var(--mut);font-size:.8rem;margin-top:28px}
   <nav class="tabs" id="tabs"></nav>
   <div class="bar"><i id="pb"></i></div>
   <div class="meta"><span id="pt"></span>
-    <span class="tools"><button id="fp">أ+</button><button id="fm">أ−</button><button id="rs">إعادة العدّ</button></span></div>
+    <span class="tools"><button id="au" title="انتقال تلقائي للذكر التالي">⏭</button><button id="wk" title="إبقاء الشاشة مضيئة">🔆</button><button id="fp">أ+</button><button id="fm">أ−</button><button id="rs">↺ إعادة</button></span></div>
   <div class="fin" id="fin">تقبّل الله طاعتك 🤍</div>
   <main id="list"></main>
-  <footer>أي ملف .txt تضيفه إلى المستودع يظهر هنا تلقائياً<span class="orn">❖ ❖ ❖</span><span class="sig">𝓓𝓻.𝓐𝓫𝓭𝓾𝓵𝔀𝓪𝓱𝓪𝓫 𝓜𝓸𝓱𝓪𝓶𝓶𝓮𝓭 𝓐𝓫𝓭𝓾𝓵𝓵𝓪𝓱 𝓐𝓵_𝓐𝓻𝓮𝓺𝓲</span></footer>
+  <footer><span class="orn">❖ ❖ ❖</span><span class="sig">𝓓𝓻.𝓐𝓫𝓭𝓾𝓵𝔀𝓪𝓱𝓪𝓫 𝓜𝓸𝓱𝓪𝓶𝓶𝓮𝓭 𝓐𝓫𝓭𝓾𝓵𝓵𝓪𝓱 𝓐𝓵_𝓐𝓻𝓮𝓺𝓲</span></footer>
 </div>
+<button class="up" id="up" aria-label="للأعلى">↑</button>
 <script>
-// إعدادات: ضع اسم مجلد إذا كانت ملفات النصوص داخل مجلد (اتركه فارغاً للمجلد الرئيسي)
+‎// إعدادات: ضع اسم مجلد إذا كانت ملفات النصوص داخل مجلد (اتركه فارغاً للمجلد الرئيسي)
 const CFG={folder:'',fallback:['morning.txt','evening.txt']};
 const $=s=>document.querySelector(s);
 const S={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
 const CNT=/([0-9])\uFE0F?\u20E3|🔟|💯/gu;
 const base=CFG.folder?CFG.folder.replace(/\/$/,'')+'/':'';
 
-/* الثيم وحجم الخط */
+‎/* الثيم وحجم الخط */
 let theme=S.get('adhkar:theme',matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
 let fs=S.get('adhkar:fs',1);
 function applyUI(){document.documentElement.dataset.theme=theme;$('#th').textContent=theme==='dark'?'☀️':'🌙';document.documentElement.style.setProperty('--fs',fs)}
@@ -84,15 +98,18 @@ $('#fp').onclick=()=>{fs=Math.min(1.6,fs+.1);S.set('adhkar:fs',fs);applyUI()};
 $('#fm').onclick=()=>{fs=Math.max(.8,fs-.1);S.set('adhkar:fs',fs);applyUI()};
 applyUI();
 
-/* الساعة والتاريخ */
+‎/* الساعة والتاريخ */
 const F={t:new Intl.DateTimeFormat('ar-SA-u-nu-latn',{hour:'numeric',minute:'2-digit',second:'2-digit',hour12:true}),
  h:new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-latn',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),
- g:new Intl.DateTimeFormat('ar-SA-u-ca-gregory-nu-latn',{day:'numeric',month:'long',year:'numeric'})};
+ g:new Intl.DateTimeFormat('ar-SA-u-ca-gregory-nu-latn',{day:'numeric',month:'long',year:'numeric'}),
+ hs:new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-latn',{day:'numeric',month:'long'}),
+ gs:new Intl.DateTimeFormat('ar-SA-u-ca-gregory-nu-latn',{day:'numeric',month:'short'})};
 const G=[[0,5,'#0b132b','#1c2d5a'],[5,7,'#2b3a67','#c86b85'],[7,11,'#0f766e','#3aa9a0'],[11,15,'#1d6fa5','#4fb3d9'],[15,18,'#b45f06','#d9954a'],[18,20,'#7b2d5b','#d4695a'],[20,24,'#0b132b','#1c2d5a']];
 function tick(){
   const d=new Date(),h=d.getHours(),p={};
   F.t.formatToParts(d).forEach(x=>p[x.type]=x.value);
   $('#clk').innerHTML=`${p.hour}:${p.minute}<small>:${p.second}</small><small>${p.dayPeriod||''}</small>`;
+  $('#mc').innerHTML=`${p.hour}:${p.minute}<small>:${p.second} ${p.dayPeriod||''}</small><em>${F.hs.format(d)} • ${F.gs.format(d)}</em>`;
   $('#hj').textContent='🌙 '+F.h.format(d);
   $('#gg').textContent='📅 '+F.g.format(d)+' م';
   const g=G.find(x=>h>=x[0]&&h<x[1]);
@@ -101,7 +118,7 @@ function tick(){
 }
 tick();setInterval(tick,1000);
 
-/* قراءة قائمة الملفات من المستودع تلقائياً */
+‎/* قراءة قائمة الملفات من المستودع تلقائياً */
 function repoInfo(){const h=location.hostname;if(!h.endsWith('.github.io'))return null;const o=h.split('.')[0];return{o,r:location.pathname.split('/')[1]||h}}
 async function listFiles(){
   const ri=repoInfo();
@@ -115,7 +132,7 @@ async function listFiles(){
   return S.get('adhkar:list',CFG.fallback.map(n=>({name:n,url:base+n+'?v='+Date.now()})));
 }
 
-/* تحليل النص إلى بطاقات */
+‎/* تحليل النص إلى بطاقات */
 const nice=n=>n.replace(/\.txt$/i,'').replace(/^\d+[-_.\s]*/,'').replace(/[-_]+/g,' ');
 function parse(f,txt){
   txt=txt.replace(/[\u200e\u200f\ufeff]/g,'').replace(/\r/g,'');
@@ -132,12 +149,14 @@ function parse(f,txt){
   }).filter(c=>c.t);
   return{title,slug:f.name.replace(/\.txt$/i,'').toLowerCase(),cards};
 }
-async function loadDoc(f){try{const r=await fetch(f.url);if(!r.ok)throw 0;return parse(f,await r.text())}catch{return null}}
+async function loadDoc(f){const ck='adhkar:txt:'+f.name;let t=null;try{const r=await fetch(f.url);if(r.ok){t=await r.text();S.set(ck,t)}}catch{}
+  if(t==null)t=S.get(ck,null);return t==null?null:parse(f,t)}
 
-/* العرض */
-let docs=[],cur=0,st=[],key='';
+‎/* العرض */
+let docs=[],cur=0,st=[],key='',els=[],au=S.get('adhkar:au',true),wl=null;
 const dayKey=()=>{const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
-function build(){const t=$('#tabs');t.textContent='';docs.forEach((d,i)=>{const b=document.createElement('button');b.className='tab';b.textContent=d.title;b.onclick=()=>show(i);t.append(b)})}
+let day=dayKey();
+function build(){const t=$('#tabs');t.textContent='';docs.forEach((d,i)=>{const b=document.createElement('button');b.className='tab';b.textContent=d.title;b.onclick=()=>{show(i);const y=$('#list').offsetTop-70;if(scrollY>y)scrollTo({top:y})};t.append(b)})}
 function prog(){
   const c=docs[cur].cards,done=c.filter((_,k)=>st[k]===0).length;
   $('#pb').style.width=(c.length?done/c.length*100:0)+'%';
@@ -146,10 +165,12 @@ function prog(){
 }
 function show(i){
   cur=i;const d=docs[i];history.replaceState(null,'','#'+d.slug);
-  document.querySelectorAll('.tab').forEach((b,k)=>b.classList.toggle('on',k===i));
+  $('#mt').textContent=d.title;document.title=d.title+' | الأذكار';
+  const tbs=document.querySelectorAll('.tab');tbs.forEach((b,k)=>b.classList.toggle('on',k===i));
+  tbs[i]&&tbs[i].scrollIntoView({inline:'center',block:'nearest'});
   key=`adhkar:${dayKey()}:${d.slug}`;st=S.get(key,[]);
   d.cards.forEach((c,k)=>{if(typeof st[k]!=='number'||st[k]>c.n)st[k]=c.n});
-  const box=$('#list');box.textContent='';
+  const box=$('#list');box.textContent='';els=[];
   d.cards.forEach((c,k)=>{
     const a=document.createElement('article'),p=document.createElement('p'),row=document.createElement('div'),
       cp=document.createElement('button'),lb=document.createElement('span'),b=document.createElement('button');
@@ -159,8 +180,10 @@ function show(i){
     lb.className='lb';lb.textContent=c.n>1?`التكرار ×${c.n}`:'';
     b.className='ctr';
     const upd=()=>{a.classList.toggle('done',st[k]===0);b.textContent=st[k]===0?'✓':st[k]};
-    b.onclick=()=>{st[k]=st[k]===0?c.n:st[k]-1;if(st[k]===0&&navigator.vibrate)navigator.vibrate(40);S.set(key,st);upd();prog()};
-    upd();row.append(cp,lb,b);a.append(p,row);box.append(a);
+    b.onclick=()=>{st[k]=st[k]===0?c.n:st[k]-1;
+      if(st[k]===0){navigator.vibrate&&navigator.vibrate(40);if(au){const j=st.findIndex((v,x)=>x>k&&v!==0);if(j>0)setTimeout(()=>els[j].scrollIntoView({behavior:'smooth',block:'center'}),350)}}
+      S.set(key,st);upd();prog()};
+    upd();row.append(cp,lb,b);a.append(p,row);box.append(a);els.push(a);
   });
   prog();
 }
@@ -176,6 +199,13 @@ async function init(){
   show(i);
 }
 $('#rf').onclick=init;
+new IntersectionObserver(([e])=>document.body.classList.toggle('sc',!e.isIntersecting)).observe($('.hero'));
+$('#up').onclick=()=>scrollTo({top:0,behavior:'smooth'});
+$('#au').classList.toggle('on',au);
+$('#au').onclick=()=>{au=!au;S.set('adhkar:au',au);$('#au').classList.toggle('on',au)};
+if(!('wakeLock' in navigator))$('#wk').hidden=true;
+$('#wk').onclick=async()=>{try{if(wl){await wl.release()}else{wl=await navigator.wakeLock.request('screen');$('#wk').classList.add('on');wl.addEventListener('release',()=>{wl=null;$('#wk').classList.remove('on')})}}catch{}};
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&docs.length&&dayKey()!==day){day=dayKey();show(cur)}});
 init();
 </script>
 </body>
