@@ -84,6 +84,7 @@ body.sc .up{opacity:1;pointer-events:auto}
 <script>
 ‎// إعدادات: ضع اسم مجلد إذا كانت ملفات النصوص داخل مجلد (اتركه فارغاً للمجلد الرئيسي)
 const CFG={folder:'',fallback:['morning.txt','evening.txt']};
+addEventListener('error',e=>{const l=document.getElementById('list');if(l)l.innerHTML='<p class="msg">⚠️ حدث خطأ: '+String(e.message||'').slice(0,120)+'</p>'});
 const $=s=>document.querySelector(s);
 const S={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
 const CNT=/([0-9])\uFE0F?\u20E3|🔟|💯/gu;
@@ -99,13 +100,14 @@ $('#fm').onclick=()=>{fs=Math.max(.8,fs-.1);S.set('adhkar:fs',fs);applyUI()};
 applyUI();
 
 ‎/* الساعة والتاريخ */
-const F={t:new Intl.DateTimeFormat('ar-SA-u-nu-latn',{hour:'numeric',minute:'2-digit',second:'2-digit',hour12:true}),
- h:new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-latn',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),
- g:new Intl.DateTimeFormat('ar-SA-u-ca-gregory-nu-latn',{day:'numeric',month:'long',year:'numeric'}),
- hs:new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-latn',{day:'numeric',month:'long'}),
- gs:new Intl.DateTimeFormat('ar-SA-u-ca-gregory-nu-latn',{day:'numeric',month:'short'})};
+const mk=(l,o)=>{try{return new Intl.DateTimeFormat(l,o)}catch{try{return new Intl.DateTimeFormat('ar-SA',o)}catch{return new Intl.DateTimeFormat(undefined,o)}}};
+const F={t:mk('ar-SA-u-nu-latn',{hour:'numeric',minute:'2-digit',second:'2-digit',hour12:true}),
+ h:mk('ar-SA-u-ca-islamic-umalqura-nu-latn',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),
+ g:mk('ar-SA-u-ca-gregory-nu-latn',{day:'numeric',month:'long',year:'numeric'}),
+ hs:mk('ar-SA-u-ca-islamic-umalqura-nu-latn',{day:'numeric',month:'long'}),
+ gs:mk('ar-SA-u-ca-gregory-nu-latn',{day:'numeric',month:'short'})};
 const G=[[0,5,'#0b132b','#1c2d5a'],[5,7,'#2b3a67','#c86b85'],[7,11,'#0f766e','#3aa9a0'],[11,15,'#1d6fa5','#4fb3d9'],[15,18,'#b45f06','#d9954a'],[18,20,'#7b2d5b','#d4695a'],[20,24,'#0b132b','#1c2d5a']];
-function tick(){
+function tick(){try{
   const d=new Date(),h=d.getHours(),p={};
   F.t.formatToParts(d).forEach(x=>p[x.type]=x.value);
   $('#clk').innerHTML=`${p.hour}:${p.minute}<small>:${p.second}</small><small>${p.dayPeriod||''}</small>`;
@@ -115,7 +117,7 @@ function tick(){
   const g=G.find(x=>h>=x[0]&&h<x[1]);
   document.documentElement.style.setProperty('--hg',`linear-gradient(160deg,${g[2]},${g[3]})`);
   $('#gr').textContent=h<5||h>=20?'ليلة طيبة':h<12?'صباح الخير':h<18?'طاب يومك':'مساء الخير';
-}
+}catch(e){}}
 tick();setInterval(tick,1000);
 
 ‎/* قراءة قائمة الملفات من المستودع تلقائياً */
@@ -199,13 +201,13 @@ async function init(){
   show(i);
 }
 $('#rf').onclick=init;
-new IntersectionObserver(([e])=>document.body.classList.toggle('sc',!e.isIntersecting)).observe($('.hero'));
-$('#up').onclick=()=>scrollTo({top:0,behavior:'smooth'});
-$('#au').classList.toggle('on',au);
-$('#au').onclick=()=>{au=!au;S.set('adhkar:au',au);$('#au').classList.toggle('on',au)};
-if(!('wakeLock' in navigator))$('#wk').hidden=true;
-$('#wk').onclick=async()=>{try{if(wl){await wl.release()}else{wl=await navigator.wakeLock.request('screen');$('#wk').classList.add('on');wl.addEventListener('release',()=>{wl=null;$('#wk').classList.remove('on')})}}catch{}};
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&docs.length&&dayKey()!==day){day=dayKey();show(cur)}});
+try{new IntersectionObserver(([e])=>document.body.classList.toggle('sc',!e.isIntersecting)).observe($('.hero'));}catch(e){}
+try{$('#up').onclick=()=>scrollTo({top:0,behavior:'smooth'});}catch(e){}
+try{$('#au').classList.toggle('on',au);}catch(e){}
+try{$('#au').onclick=()=>{au=!au;S.set('adhkar:au',au);$('#au').classList.toggle('on',au)};}catch(e){}
+try{if(!('wakeLock' in navigator))$('#wk').hidden=true;}catch(e){}
+try{$('#wk').onclick=async()=>{try{if(wl){await wl.release()}else{wl=await navigator.wakeLock.request('screen');$('#wk').classList.add('on');wl.addEventListener('release',()=>{wl=null;$('#wk').classList.remove('on')})}}catch{}};}catch(e){}
+try{document.addEventListener('visibilitychange',()=>{if(!document.hidden&&docs.length&&dayKey()!==day){day=dayKey();show(cur)}});}catch(e){}
 init();
 </script>
 </body>
