@@ -82,9 +82,12 @@ body.sc .up{opacity:1;pointer-events:auto}
 </div>
 <button class="up" id="up" aria-label="للأعلى">↑</button>
 <script>
+addEventListener('error',function(e){var l=document.getElementById('list');if(l)l.innerHTML='<p class="msg">⚠️ خطأ: '+String(e.message||'').slice(0,140)+' ('+(e.lineno||0)+')</p>'});
+</script>
+<script>(function(){
+
 ‎// إعدادات: ضع اسم مجلد إذا كانت ملفات النصوص داخل مجلد (اتركه فارغاً للمجلد الرئيسي)
 const CFG={owner:'',repo:'',folder:'',fallback:['morning.txt','evening.txt']};
-addEventListener('error',e=>{const l=document.getElementById('list');if(l)l.innerHTML='<p class="msg">⚠️ حدث خطأ: '+String(e.message||'').slice(0,120)+'</p>'});
 const $=s=>document.querySelector(s);
 const S={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
 const CNT=/([0-9])\uFE0F?\u20E3|🔟|💯/gu;
@@ -170,7 +173,7 @@ async function loadDoc(f){
 }
 
 ‎/* العرض */
-let docs=[],cur=0,st=[],key='',els=[],au=S.get('adhkar:au',true),wl=null;
+let docs=[],cur=0,st=[],key='',els=[],autoNext=S.get('adhkar:au',true),wl=null;
 const dayKey=()=>{const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
 let day=dayKey();
 function build(){const t=$('#tabs');t.textContent='';docs.forEach((d,i)=>{const b=document.createElement('button');b.className='tab';b.textContent=d.title;b.onclick=()=>{show(i);const y=$('#list').offsetTop-70;if(scrollY>y)scrollTo({top:y})};t.append(b)})}
@@ -198,7 +201,7 @@ function show(i){
     b.className='ctr';
     const upd=()=>{a.classList.toggle('done',st[k]===0);b.textContent=st[k]===0?'✓':st[k]};
     b.onclick=()=>{st[k]=st[k]===0?c.n:st[k]-1;
-      if(st[k]===0){navigator.vibrate&&navigator.vibrate(40);if(au){const j=st.findIndex((v,x)=>x>k&&v!==0);if(j>0)setTimeout(()=>els[j].scrollIntoView({behavior:'smooth',block:'center'}),350)}}
+      if(st[k]===0){navigator.vibrate&&navigator.vibrate(40);if(autoNext){const j=st.findIndex((v,x)=>x>k&&v!==0);if(j>0)setTimeout(()=>els[j].scrollIntoView({behavior:'smooth',block:'center'}),350)}}
       S.set(key,st);upd();prog()};
     upd();row.append(cp,lb,b);a.append(p,row);box.append(a);els.push(a);
   });
@@ -218,12 +221,13 @@ async function init(){
 $('#rf').onclick=init;
 try{new IntersectionObserver(([e])=>document.body.classList.toggle('sc',!e.isIntersecting)).observe($('.hero'));}catch(e){}
 try{$('#up').onclick=()=>scrollTo({top:0,behavior:'smooth'});}catch(e){}
-try{$('#au').classList.toggle('on',au);}catch(e){}
-try{$('#au').onclick=()=>{au=!au;S.set('adhkar:au',au);$('#au').classList.toggle('on',au)};}catch(e){}
+try{$('#au').classList.toggle('on',autoNext);}catch(e){}
+try{$('#au').onclick=()=>{autoNext=!autoNext;S.set('adhkar:au',autoNext);$('#au').classList.toggle('on',autoNext)};}catch(e){}
 try{if(!('wakeLock' in navigator))$('#wk').hidden=true;}catch(e){}
 try{$('#wk').onclick=async()=>{try{if(wl){await wl.release()}else{wl=await navigator.wakeLock.request('screen');$('#wk').classList.add('on');wl.addEventListener('release',()=>{wl=null;$('#wk').classList.remove('on')})}}catch{}};}catch(e){}
 try{document.addEventListener('visibilitychange',()=>{if(!document.hidden&&docs.length&&dayKey()!==day){day=dayKey();show(cur)}});}catch(e){}
 init();
+})();
 </script>
 </body>
 </html>
