@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>الأذكار</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="theme-color" content="#0f766e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="الأذكار">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
@@ -43,6 +51,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:Cairo,system-ui,
 .fin.show{display:block}
 .msg{text-align:center;color:var(--mut);padding:40px 10px}
 footer{text-align:center;color:var(--mut);font-size:.8rem;margin-top:28px}
+.dua{display:block;font-family:'Amiri Quran',serif;font-size:1.25rem;color:var(--ink);margin-top:12px}
 .sig{display:block;direction:ltr;font-size:1.35rem;line-height:1.6;margin-top:10px;background:linear-gradient(90deg,var(--acc),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:600}
 .orn{color:var(--gold);letter-spacing:6px;margin-top:6px;display:block}
 .mini{position:fixed;top:0;left:0;right:0;margin:auto;max-width:720px;height:calc(env(safe-area-inset-top,0px) + 52px);padding:env(safe-area-inset-top,0px) 16px 0;z-index:20;display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--hg,#0f766e);color:#fff;border-radius:0 0 18px 18px;box-shadow:var(--sh);transform:translateY(-115%);transition:transform .3s}
@@ -78,7 +87,7 @@ body.sc .up{opacity:1;pointer-events:auto}
     <span class="tools"><button id="au" title="انتقال تلقائي للذكر التالي">⏭</button><button id="wk" title="إبقاء الشاشة مضيئة">🔆</button><button id="fp">أ+</button><button id="fm">أ−</button><button id="rs">↺ إعادة</button></span></div>
   <div class="fin" id="fin">تقبّل الله طاعتك 🤍</div>
   <main id="list"><p class="msg">جاري التحميل…</p></main>
-  <footer><span class="orn">❖ ❖ ❖</span><span class="sig">𝓓𝓻.𝓐𝓫𝓭𝓾𝓵𝔀𝓪𝓱𝓪𝓫 𝓜𝓸𝓱𝓪𝓶𝓶𝓮𝓭 𝓐𝓫𝓭𝓾𝓵𝓵𝓪𝓱 𝓐𝓵_𝓐𝓻𝓮𝓺𝓲</span></footer>
+  <footer><span class="orn">❖ ❖ ❖</span><span class="dua">لا تنسونا من صالح دعائكم</span><span class="sig">𝓓𝓻.𝓐𝓫𝓭𝓾𝓵𝔀𝓪𝓱𝓪𝓫 𝓜𝓸𝓱𝓪𝓶𝓶𝓮𝓭 𝓐𝓫𝓭𝓾𝓵𝓵𝓪𝓱 𝓐𝓵_𝓐𝓻𝓮𝓺𝓲</span></footer>
 </div>
 <button class="up" id="up" aria-label="للأعلى">↑</button>
 <script>
@@ -229,5 +238,6 @@ try{document.addEventListener('visibilitychange',()=>{if(!document.hidden&&docs.
 init();
 })();
 </script>
+<script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}</script>
 </body>
 </html>
