@@ -23,7 +23,9 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:Cairo,system-ui,
 .wrap{max-width:720px;margin:auto;padding:0 14px 60px}
 .hero{background:var(--hg,#0f766e);color:#fff;padding:calc(env(safe-area-inset-top,0px) + 14px) 20px 26px;border-radius:0 0 36px 36px;box-shadow:var(--sh);position:relative;overflow:hidden;max-width:720px;margin:auto}
 .hero:before{content:"";position:absolute;width:240px;height:240px;border-radius:50%;background:rgba(255,255,255,.08);left:-60px;bottom:-90px}
-.top{display:flex;justify-content:space-between;align-items:center;position:relative}
+.top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;position:relative}
+.g2{display:flex;gap:8px;justify-self:start}
+#rf{justify-self:end}
 .ib{background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:12px;width:40px;height:40px;font-size:1.1rem;cursor:pointer}
 .bsm{font-family:'Amiri Quran',serif;font-size:1.7rem}
 .gr{text-align:center;margin-top:6px;font-weight:600;opacity:.9;position:relative}
@@ -92,13 +94,22 @@ body.sc .up{opacity:1;pointer-events:auto}
 .bd small{display:block;color:var(--mut);font-size:.72rem;line-height:1.5}
 .bd.lock{opacity:.45;filter:grayscale(1)}
 .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 80px);transform:translateX(-50%);background:var(--acc);color:var(--on);padding:12px 20px;border-radius:16px;font-weight:700;z-index:60;box-shadow:var(--sh);max-width:90%;text-align:center}
+.rem{display:flex;align-items:center;gap:10px;margin-top:14px;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,var(--acc),var(--gold));color:var(--on);font-weight:700}
+.rem[hidden]{display:none}
+.rem span{flex:1}
+.rem button{background:rgba(255,255,255,.28);border:0;color:inherit;border-radius:10px;padding:6px 12px;font:700 .85rem Cairo;cursor:pointer}
+.pbtn{display:block;width:100%;margin-top:10px;padding:12px;border-radius:14px;border:0;background:var(--acc);color:var(--on);font:700 .95rem Cairo;cursor:pointer}
+.rr{display:flex;justify-content:space-between;align-items:center;padding:12px 4px;border-bottom:1px solid var(--line);font-weight:600}
+.rr label{display:flex;align-items:center;gap:10px}
+.rr input[type=checkbox]{width:20px;height:20px;accent-color:var(--acc)}
+.rr input[type=time]{font:inherit;padding:6px 8px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
 </style>
 </head>
 <body>
 <div class="mini"><b id="mt"></b><span class="mc" id="mc"></span></div>
 <header class="hero">
   <div class="top">
-    <button class="ib" id="th" aria-label="الوضع">🌙</button>
+    <span class="g2"><button class="ib" id="th" aria-label="الوضع">🌙</button><button class="ib" id="bl" aria-label="التنبيهات">🔔</button></span>
     <span class="bsm">﷽</span>
     <button class="ib" id="rf" aria-label="تحديث">↻</button>
   </div>
@@ -108,6 +119,7 @@ body.sc .up{opacity:1;pointer-events:auto}
   <div class="streak" id="stk"></div>
 </header>
 <div class="wrap">
+  <div class="rem" id="rem" hidden></div>
   <nav class="tabs" id="tabs"></nav>
   <div class="bar"><i id="pb"></i></div>
   <div class="meta"><span id="pt"></span>
@@ -250,7 +262,7 @@ async function init(){
   $('#list').innerHTML='<p class="msg">جاري التحميل…</p>';
   docs=(await Promise.all((await listFiles()).map(loadDoc))).filter(Boolean);
   if(!docs.length){const m=document.createElement('p');m.className='msg';m.textContent='لم أجد أي نص. تأكد أن ملفات .txt مرفوعة في المستودع. ('+dbg.join(' · ')+')';$('#list').textContent='';$('#list').append(m);return}
-  build();markTabs();
+  build();markTabs();setTimeout(check,400);
   const h=decodeURIComponent(location.hash.slice(1));
   let i=docs.findIndex(d=>d.slug===h);
   if(i<0){const re=new Date().getHours()<15?/صباح|morning/i:/مساء|evening/i;i=docs.findIndex(d=>re.test(d.title+d.slug));if(i<0)i=0}
@@ -340,6 +352,87 @@ function openPanel(){
 }
 $('#ov').onclick=e=>{if(e.target.id==='ov'||e.target.classList.contains('x'))$('#ov').classList.remove('show')};
 $('#stk').onclick=openPanel;
+const R=[
+{id:'m',n:'أذكار الصباح',re:/صباح|morning/i},
+{id:'e',n:'أذكار المساء',re:/مساء|evening/i},
+{id:'s',n:'أذكار النوم',re:/نوم|sleep/i}
+];
+const RD={m:{on:true,t:'05:30'},e:{on:true,t:'17:00'},s:{on:true,t:'22:00'}};
+function getRem(){const s=S.get('adhkar:rem',{})||{},o={};R.forEach(r=>{o[r.id]=Object.assign({},RD[r.id],s[r.id]||{})});return o}
+function docIdx(r){return docs.findIndex(d=>r.re.test(d.title+' '+d.slug))}
+function notify(r,i){
+  try{
+    if(!('Notification' in window)||Notification.permission!=='granted')return;
+    const o={body:'حان وقت '+r.n+' — اضغط للفتح',icon:'icon-192.png',tag:'adhkar-'+r.id,lang:'ar',dir:'rtl',data:{url:'./'+(i>=0?'#'+docs[i].slug:'')}};
+    (navigator.serviceWorker?navigator.serviceWorker.getRegistration():Promise.resolve(null))
+      .then(reg=>{reg?reg.showNotification('الأذكار',o):new Notification('الأذكار',o)}).catch(()=>{});
+  }catch(e){}
+}
+function fire(r,i){
+  const el=$('#rem');el.textContent='';el.hidden=false;
+  const sp=document.createElement('span');sp.textContent='🔔 حان وقت '+r.n;el.append(sp);
+  if(i>=0){const b=document.createElement('button');b.textContent='فتح';
+    b.onclick=()=>{show(i);el.hidden=true;scrollTo({top:Math.max(0,$('#list').offsetTop-70),behavior:'smooth'})};el.append(b)}
+  const x=document.createElement('button');x.textContent='✕';x.onclick=()=>{el.hidden=true};el.append(x);
+  navigator.vibrate&&navigator.vibrate(60);
+  notify(r,i);
+}
+function check(){
+  try{
+    if(!docs.length)return;
+    const rm=getRem(),fired=S.get('adhkar:remfired',{})||{},now=new Date(),nm=now.getHours()*60+now.getMinutes();
+    R.forEach(r=>{
+      const c=rm[r.id];if(!c.on)return;
+      const p=c.t.split(':'),tm=(+p[0])*60+(+p[1]);
+      if((nm-tm+1440)%1440>=240)return;
+      const b=new Date(now);if(nm<tm)b.setDate(b.getDate()-1);
+      const k=keyOf(b);
+      if(fired[r.id]===k)return;
+      fired[r.id]=k;S.set('adhkar:remfired',fired);
+      const i=docIdx(r);
+      if(i>=0&&(loadV().done[keyOf(now)]||[]).indexOf(docs[i].slug)>=0)return;
+      fire(r,i);
+    });
+  }catch(e){}
+}
+function buildIcs(){
+  const rm=getRem(),now=new Date(),pad=n=>String(n).padStart(2,'0');
+  const f=d=>d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'T'+pad(d.getHours())+pad(d.getMinutes())+'00';
+  const base=location.origin+location.pathname;
+  const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Adhkar//AR//EN','CALSCALE:GREGORIAN'];
+  R.forEach(r=>{
+    const c=rm[r.id];if(!c.on)return;
+    const p=c.t.split(':'),s=new Date(now.getFullYear(),now.getMonth(),now.getDate(),+p[0],+p[1]),e=new Date(s.getTime()+600000),i=docIdx(r);
+    L.push('BEGIN:VEVENT','UID:adhkar-'+r.id+'@'+location.hostname,'DTSTAMP:'+f(now),'DTSTART:'+f(s),'DTEND:'+f(e),'RRULE:FREQ=DAILY',
+      'SUMMARY:🔔 '+r.n,'DESCRIPTION:حان وقت '+r.n+'\\n'+base+(i>=0?'#'+docs[i].slug:''),
+      'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+r.n,'TRIGGER:PT0M','END:VALARM','END:VEVENT');
+  });
+  L.push('END:VCALENDAR');return L.join('\r\n');
+}
+function dlIcs(){
+  const blob=new Blob([buildIcs()],{type:'text/calendar;charset=utf-8'}),a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download='adhkar-reminders.ics';document.body.append(a);a.click();
+  setTimeout(()=>{a.remove();URL.revokeObjectURL(a.href)},15000);
+}
+function openRem(){
+  const rm=getRem(),ov=$('#ov'),ns='Notification' in window?Notification.permission:'na';
+  const tx=ns==='granted'?'✅ إشعارات الجهاز مفعّلة':ns==='denied'?'⛔ الإشعارات محجوبة من إعدادات الجهاز':ns==='na'?'ℹ️ إشعارات الجهاز تعمل بعد تثبيت التطبيق على الشاشة الرئيسية':'🔕 إشعارات الجهاز غير مفعّلة بعد';
+  ov.innerHTML='<div class="sheet"><h3><span>🔔 تنبيهات الأذكار</span><button class="x">✕</button></h3>'
+   +'<div class="goal">'+tx+'</div>'+(ns==='default'?'<button class="pbtn" id="rq">تفعيل إشعارات الجهاز</button>':'')
+   +R.map(r=>'<div class="rr"><label><input type="checkbox" data-id="'+r.id+'"'+(rm[r.id].on?' checked':'')+'> '+r.n+'</label><input type="time" data-t="'+r.id+'" value="'+rm[r.id].t+'"></div>').join('')
+   +'<button class="pbtn" id="rtest">🔔 تجربة تنبيه الآن</button><button class="pbtn" id="rics">📅 إضافة للتقويم (ينبّهك والتطبيق مغلق)</button>'
+   +'<div class="goal" style="margin-top:14px">التنبيه داخل التطبيق يظهر عند فتحه أو وهو مفتوح في الوقت المحدد. أما التنبيه والتطبيق مغلق فيحتاج إضافة الأوقات إلى تقويم الجوال.</div></div>';
+  ov.classList.add('show');
+  const save=()=>{const o={};ov.querySelectorAll('[data-id]').forEach(c=>{const id=c.dataset.id,t=ov.querySelector('[data-t="'+id+'"]').value||RD[id].t;o[id]={on:c.checked,t}});S.set('adhkar:rem',o);S.set('adhkar:remfired',{})};
+  ov.querySelectorAll('input').forEach(i=>i.onchange=()=>{save();check()});
+  const rq=ov.querySelector('#rq');if(rq)rq.onclick=()=>{try{Notification.requestPermission().then(openRem)}catch(e){}};
+  ov.querySelector('#rtest').onclick=()=>{ov.classList.remove('show');fire(R[0],docIdx(R[0]))};
+  ov.querySelector('#rics').onclick=dlIcs;
+}
+$('#bl').onclick=openRem;
+setInterval(check,30000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)check()});
+addEventListener('hashchange',()=>{const h=decodeURIComponent(location.hash.slice(1)),i=docs.findIndex(d=>d.slug===h);if(i>=0&&i!==cur)show(i)});
 visit();
 init();
 })();

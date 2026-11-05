@@ -1,4 +1,4 @@
-const V = 'adhkar-v1';
+const V = 'adhkar-v2';
 const SHELL = ['./', 'index.html', 'manifest.json', 'icon-192.png', 'icon-512.png', 'icon-180.png'];
 
 self.addEventListener('install', e => {
@@ -57,6 +57,22 @@ self.addEventListener('fetch', e => {
         return res;
       }).catch(() => m);
       return m || f;
+    })
+  );
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const url = new URL((e.notification.data && e.notification.data.url) || './', self.registration.scope).href;
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      for (const c of list) {
+        if ('focus' in c) {
+          if (c.navigate) c.navigate(url).catch(() => {});
+          return c.focus();
+        }
+      }
+      return clients.openWindow(url);
     })
   );
 });
