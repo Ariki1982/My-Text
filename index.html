@@ -66,6 +66,32 @@ body.sc .tabs{top:calc(env(safe-area-inset-top,0px) + 52px)}
 .up{position:fixed;left:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);width:44px;height:44px;border-radius:50%;border:0;background:var(--acc);color:var(--on);font-size:1.3rem;box-shadow:var(--sh);cursor:pointer;opacity:0;pointer-events:none;transition:opacity .3s}
 body.sc .up{opacity:1;pointer-events:auto}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+.streak{text-align:center;margin-top:12px;position:relative;cursor:pointer}
+.chip{display:inline-block;background:rgba(255,255,255,.2);border-radius:999px;padding:5px 16px;font-weight:800;font-size:.95rem}
+.dots{display:flex;justify-content:center;align-items:center;gap:7px;margin-top:9px}
+.dots i{display:inline-flex;align-items:center;justify-content:center;font-style:normal;font-size:9px;font-weight:800;color:#3a2a08;width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.28)}
+.dots i.on{background:rgba(255,255,255,.8)}
+.dots i.ok{width:16px;height:16px;background:#ffd479}
+.dots i.td{outline:2px solid rgba(255,255,255,.75);outline-offset:2px}
+.st2{font-size:.78rem;opacity:.92;margin-top:8px}
+.ov{position:fixed;top:0;left:0;right:0;bottom:0;z-index:50;background:rgba(0,0,0,.5);display:none;align-items:flex-end;justify-content:center}
+.ov.show{display:flex}
+.sheet{background:var(--card);color:var(--ink);width:100%;max-width:720px;max-height:88vh;overflow:auto;border-radius:26px 26px 0 0;padding:20px 18px calc(env(safe-area-inset-bottom,0px) + 22px)}
+.sheet h3{margin:0 0 14px;font-size:1.2rem;display:flex;justify-content:space-between;align-items:center}
+.x{background:none;border:0;font-size:1.3rem;color:var(--mut);cursor:pointer}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.stat{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:10px 4px;text-align:center}
+.stat b{display:block;font-size:1.4rem;color:var(--acc)}
+.stat span{font-size:.72rem;color:var(--mut)}
+.goal{margin-bottom:16px;font-size:.88rem;color:var(--mut)}
+.goal .bar{margin-top:8px}
+.bgs{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.bd{display:flex;gap:10px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:10px}
+.bd .em{font-size:1.8rem}
+.bd b{font-size:.92rem}
+.bd small{display:block;color:var(--mut);font-size:.72rem;line-height:1.5}
+.bd.lock{opacity:.45;filter:grayscale(1)}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 80px);transform:translateX(-50%);background:var(--acc);color:var(--on);padding:12px 20px;border-radius:16px;font-weight:700;z-index:60;box-shadow:var(--sh);max-width:90%;text-align:center}
 </style>
 </head>
 <body>
@@ -79,6 +105,7 @@ body.sc .up{opacity:1;pointer-events:auto}
   <div class="gr" id="gr"></div>
   <div class="clock" id="clk"></div>
   <div class="dates"><b id="hj"></b><span id="gg"></span></div>
+  <div class="streak" id="stk"></div>
 </header>
 <div class="wrap">
   <nav class="tabs" id="tabs"></nav>
@@ -89,6 +116,7 @@ body.sc .up{opacity:1;pointer-events:auto}
   <main id="list"><p class="msg">جاري التحميل…</p></main>
   <footer><span class="orn">❖ ❖ ❖</span><span class="dua">لا تنسونا من صالح دعائكم</span><span class="sig">𝓓𝓻.𝓐𝓫𝓭𝓾𝓵𝔀𝓪𝓱𝓪𝓫 𝓜𝓸𝓱𝓪𝓶𝓶𝓮𝓭 𝓐𝓫𝓭𝓾𝓵𝓵𝓪𝓱 𝓐𝓵_𝓐𝓻𝓮𝓺𝓲</span></footer>
 </div>
+<div class="ov" id="ov"></div>
 <button class="up" id="up" aria-label="للأعلى">↑</button>
 <script>
 addEventListener('error',function(e){var l=document.getElementById('list');if(l)l.innerHTML='<p class="msg">⚠️ خطأ: '+String(e.message||'').slice(0,140)+' ('+(e.lineno||0)+')</p>'});
@@ -191,6 +219,7 @@ function prog(){
   $('#pb').style.width=(c.length?done/c.length*100:0)+'%';
   $('#pt').textContent=`${done} / ${c.length} أنجزت`;
   $('#fin').classList.toggle('show',c.length>0&&done===c.length);
+  if(c.length>0&&done===c.length)markDone(docs[cur].slug);
 }
 function show(i){
   cur=i;const d=docs[i];history.replaceState(null,'','#'+d.slug);
@@ -221,7 +250,7 @@ async function init(){
   $('#list').innerHTML='<p class="msg">جاري التحميل…</p>';
   docs=(await Promise.all((await listFiles()).map(loadDoc))).filter(Boolean);
   if(!docs.length){const m=document.createElement('p');m.className='msg';m.textContent='لم أجد أي نص. تأكد أن ملفات .txt مرفوعة في المستودع. ('+dbg.join(' · ')+')';$('#list').textContent='';$('#list').append(m);return}
-  build();
+  build();markTabs();
   const h=decodeURIComponent(location.hash.slice(1));
   let i=docs.findIndex(d=>d.slug===h);
   if(i<0){const re=new Date().getHours()<15?/صباح|morning/i:/مساء|evening/i;i=docs.findIndex(d=>re.test(d.title+d.slug));if(i<0)i=0}
@@ -234,7 +263,84 @@ try{$('#au').classList.toggle('on',autoNext);}catch(e){}
 try{$('#au').onclick=()=>{autoNext=!autoNext;S.set('adhkar:au',autoNext);$('#au').classList.toggle('on',autoNext)};}catch(e){}
 try{if(!('wakeLock' in navigator))$('#wk').hidden=true;}catch(e){}
 try{$('#wk').onclick=async()=>{try{if(wl){await wl.release()}else{wl=await navigator.wakeLock.request('screen');$('#wk').classList.add('on');wl.addEventListener('release',()=>{wl=null;$('#wk').classList.remove('on')})}}catch{}};}catch(e){}
-try{document.addEventListener('visibilitychange',()=>{if(!document.hidden&&docs.length&&dayKey()!==day){day=dayKey();show(cur)}});}catch(e){}
+try{document.addEventListener('visibilitychange',()=>{if(!document.hidden&&docs.length&&dayKey()!==day){day=dayKey();visit();show(cur)}});}catch(e){}
+const BG=[
+{id:'s3',e:'🌱',t:'بداية الطريق',d:'3 أيام متتالية',k:'s',n:3},
+{id:'s7',e:'🌿',t:'أسبوع كامل',d:'7 أيام متتالية',k:'s',n:7},
+{id:'s14',e:'🌙',t:'أسبوعان',d:'14 يوماً متتالية',k:'s',n:14},
+{id:'s30',e:'⭐',t:'شهر كامل',d:'30 يوماً متتالية',k:'s',n:30},
+{id:'s60',e:'💎',t:'ثبات',d:'60 يوماً متتالية',k:'s',n:60},
+{id:'s100',e:'👑',t:'مئة يوم',d:'100 يوم متتالية',k:'s',n:100},
+{id:'c1',e:'🏅',t:'أول ختم',d:'إتمام مجموعة أذكار كاملة',k:'c',n:1},
+{id:'c10',e:'🎖️',t:'عشر مجموعات',d:'إتمام 10 مجموعات',k:'c',n:10},
+{id:'c50',e:'🏆',t:'خمسون مجموعة',d:'إتمام 50 مجموعة',k:'c',n:50},
+{id:'f1',e:'☀️',t:'يوم كامل',d:'إتمام كل المجموعات في يوم واحد',k:'f',n:1}
+];
+function keyOf(d){return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()}
+function loadV(){return Object.assign({last:'',streak:0,best:0,total:0,days:[],done:{},comp:0,full:0,badges:{}},S.get('adhkar:streak',null)||{})}
+function valOf(v,b){return b.k==='s'?v.best:b.k==='c'?v.comp:v.full}
+function csOf(v){let n=0;const d=new Date();if(!(v.done[keyOf(d)]||[]).length)d.setDate(d.getDate()-1);while((v.done[keyOf(d)]||[]).length){n++;d.setDate(d.getDate()-1)}return n}
+function toast(b,i){setTimeout(()=>{const t=document.createElement('div');t.className='toast';t.textContent='🏆 إنجاز جديد: '+b.e+' '+b.t;document.body.append(t);navigator.vibrate&&navigator.vibrate([40,40,40]);setTimeout(()=>t.remove(),4000)},i*4200)}
+function award(v){
+  const k=keyOf(new Date()),nw=[];
+  BG.forEach(b=>{if(!v.badges[b.id]&&valOf(v,b)>=b.n){v.badges[b.id]=k;nw.push(b)}});
+  if(nw.length){S.set('adhkar:streak',v);nw.forEach(toast)}
+}
+function renderStreak(v){
+  try{
+    const n=v.streak,op=new Set(v.days);let dots='';
+    for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=keyOf(d);
+      const c=(v.done[k]||[]).length?'ok':op.has(k)?'on':'';
+      dots+='<i class="'+c+(i===0?' td':'')+'">'+(c==='ok'?'✓':'')+'</i>'}
+    const w=n===1?'يوم واحد':n===2?'يومان':n<=10?n+' أيام':n+' يوماً';
+    const em=BG.filter(b=>v.badges[b.id]).map(b=>b.e).join(' ');
+    const nb=BG.find(b=>b.k==='s'&&!v.badges[b.id]);
+    const goal=nb?'🎯 الهدف: '+nb.e+' '+nb.t+' ('+n+'/'+nb.n+')':'🎉 حققت كل أهداف السلسلة';
+    $('#stk').innerHTML='<span class="chip">🔥 سلسلتك: '+w+'</span><div class="dots">'+dots+'</div><div class="st2">'+(em?em+' · ':'')+goal+'</div>';
+  }catch(e){}
+}
+function visit(){
+  try{
+    const k=keyOf(new Date());const v=loadV();
+    if(v.last!==k){
+      const y=new Date();y.setDate(y.getDate()-1);
+      v.streak=(v.last===keyOf(y))?v.streak+1:1;
+      v.best=Math.max(v.best,v.streak);v.total++;v.last=k;
+      v.days.push(k);v.days=v.days.slice(-60);
+      S.set('adhkar:streak',v);
+    }
+    award(v);renderStreak(v);
+  }catch(e){}
+}
+function markTabs(){
+  try{const a=loadV().done[keyOf(new Date())]||[];
+    document.querySelectorAll('.tab').forEach((b,i)=>{if(docs[i])b.textContent=docs[i].title+(a.indexOf(docs[i].slug)>=0?' ✓':'')})}catch(e){}
+}
+function markDone(slug){
+  try{
+    const v=loadV(),k=keyOf(new Date()),a=v.done[k]||(v.done[k]=[]);
+    if(a.indexOf(slug)>=0){markTabs();return}
+    a.push(slug);v.comp++;
+    if(docs.length>1&&docs.every(d=>a.indexOf(d.slug)>=0))v.full++;
+    const ks=Object.keys(v.done);if(ks.length>400)ks.slice(0,ks.length-400).forEach(x=>delete v.done[x]);
+    S.set('adhkar:streak',v);award(v);renderStreak(v);markTabs();
+  }catch(e){}
+}
+function openPanel(){
+  const v=loadV(),ov=$('#ov');
+  const nb=BG.find(b=>b.k==='s'&&!v.badges[b.id]);
+  const pct=nb?Math.min(100,Math.round(v.streak/nb.n*100)):100;
+  const st=[[v.streak,'السلسلة الحالية'],[v.best,'أفضل سلسلة'],[csOf(v),'سلسلة الإتمام'],[v.total,'أيام الفتح'],[v.comp,'مجموعات مكتملة'],[v.full,'أيام كاملة']];
+  const fmt=k=>{const p=k.split('-');return F.gs.format(new Date(+p[0],+p[1]-1,+p[2]))};
+  ov.innerHTML='<div class="sheet"><h3><span>🏆 إنجازاتك</span><button class="x">✕</button></h3>'
+   +'<div class="stats">'+st.map(x=>'<div class="stat"><b>'+x[0]+'</b><span>'+x[1]+'</span></div>').join('')+'</div>'
+   +(nb?'<div class="goal">الهدف التالي: '+nb.e+' '+nb.t+' — '+v.streak+' من '+nb.n+'<div class="bar"><i style="width:'+pct+'%"></i></div></div>':'<div class="goal">🎉 حققت كل أهداف السلسلة</div>')
+   +'<div class="bgs">'+BG.map(b=>{const g=v.badges[b.id];return '<div class="bd'+(g?'':' lock')+'"><span class="em">'+b.e+'</span><div><b>'+b.t+'</b><small>'+(g?'حصلت عليه '+fmt(g):b.d)+'</small></div></div>'}).join('')+'</div></div>';
+  ov.classList.add('show');
+}
+$('#ov').onclick=e=>{if(e.target.id==='ov'||e.target.classList.contains('x'))$('#ov').classList.remove('show')};
+$('#stk').onclick=openPanel;
+visit();
 init();
 })();
 </script>
