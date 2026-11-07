@@ -193,7 +193,11 @@ body.sc .up{opacity:1;pointer-events:auto}
 <div class="ov" id="ov"></div>
 <button class="up" id="up" aria-label="للأعلى"><svg class="ic"><use href="#i-up"/></svg></button>
 <script>
-addEventListener('error',function(e){var l=document.getElementById('list');if(l)l.innerHTML='<p class="msg">⚠️ خطأ: '+String(e.message||'').slice(0,140)+' ('+(e.lineno||0)+')</p>'});
+addEventListener('error',function(e){
+  var l=document.getElementById('list'),m=String(e.message||'').slice(0,140);
+  if(l&&!l.querySelector('.card')){l.innerHTML='<p class="msg">⚠️ خطأ: '+m+' ('+(e.lineno||0)+')</p>'}
+  else{var t=document.createElement('div');t.className='toast';t.textContent='⚠️ '+m;document.body.appendChild(t);setTimeout(function(){t.remove()},5000)}
+});
 </script>
 <script>(function(){
 
@@ -324,7 +328,7 @@ function show(i){
     b.setAttribute('aria-label','عدّ');
     const upd=()=>{const r=st[k],dn=r===0;a.classList.toggle('done',dn);b.style.setProperty('--p',Math.round((c.n-r)/c.n*100)+'%');b.innerHTML='<span class="in">'+(dn?ic('check'):r)+'</span>'};
     b.onclick=()=>{st[k]=st[k]===0?c.n:st[k]-1;
-      if(st[k]===0){navigator.vibrate&&navigator.vibrate(40);if(autoNext){const j=st.findIndex((v,x)=>x>k&&v!==0);if(j>0)setTimeout(()=>els[j].scrollIntoView({behavior:'smooth',block:'center'}),350)}}
+      if(st[k]===0){navigator.vibrate&&navigator.vibrate(40);if(autoNext){const j=st.findIndex((v,x)=>x>k&&v!==0);if(j>0){const mine=els;setTimeout(()=>{const t=mine[j];if(t&&t.isConnected)t.scrollIntoView({behavior:'smooth',block:'center'})},350)}}}
       S.set(key,st);upd();prog()};
     upd();
     hd.append(no);if(c.n>1)hd.append(el('span','tg','×'+c.n));hd.append(el('span','sp'),cp);
