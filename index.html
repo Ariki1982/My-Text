@@ -142,6 +142,9 @@ body.sc .up{opacity:1;pointer-events:auto}
 .rr label{display:flex;align-items:center;gap:10px}
 .rr input[type=checkbox]{width:20px;height:20px;accent-color:var(--acc)}
 .rr input[type=time]{font:inherit;padding:6px 8px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.hx{position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:.01;overflow:hidden;pointer-events:none}
+.rr select{font:inherit;padding:6px 8px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.rr input[type=range]{width:150px;accent-color:var(--acc)}
 @media(min-width:900px){.wrap,.hin{max-width:780px}.t{font-size:calc(var(--fs)*1.6rem)}.clock{font-size:5rem}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -160,12 +163,13 @@ body.sc .up{opacity:1;pointer-events:auto}
 <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></symbol>
 <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
 <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
 <symbol id="i-flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></symbol>
 </defs></svg>
 <div class="mini"><b id="mt"></b><span class="mc" id="mc"></span></div>
 <header class="hero"><div class="hin">
   <div class="top">
-    <span class="g2"><button class="ib" id="th" aria-label="الوضع"><svg class="ic"><use href="#i-moon"/></svg></button><button class="ib" id="bl" aria-label="التنبيهات"><svg class="ic"><use href="#i-bell"/></svg></button></span>
+    <span class="g2"><button class="ib" id="th" aria-label="الوضع"><svg class="ic"><use href="#i-moon"/></svg></button><button class="ib" id="bl" aria-label="التنبيهات"><svg class="ic"><use href="#i-bell"/></svg></button><button class="ib" id="bs" aria-label="الصوت والاهتزاز"><svg class="ic"><use href="#i-sliders"/></svg></button></span>
     <button class="ib" id="rf" aria-label="تحديث"><svg class="ic"><use href="#i-refresh"/></svg></button>
   </div>
   <div class="bsm"><i></i><span>بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</span><i></i></div>
@@ -190,6 +194,7 @@ body.sc .up{opacity:1;pointer-events:auto}
   <main id="list"><p class="msg">جاري التحميل…</p></main>
   <footer><span class="orn">❖ ❖ ❖</span><span class="dua">لا تنسونا من صالح دعائكم</span><span class="sig">𝓓𝓻.𝓐𝓫𝓭𝓾𝓵𝔀𝓪𝓱𝓪𝓫 𝓜𝓸𝓱𝓪𝓶𝓶𝓮𝓭 𝓐𝓫𝓭𝓾𝓵𝓵𝓪𝓱 𝓐𝓵_𝓐𝓻𝓮𝓺𝓲</span></footer>
 </div>
+<label class="hx" aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label>
 <div class="ov" id="ov"></div>
 <button class="up" id="up" aria-label="للأعلى"><svg class="ic"><use href="#i-up"/></svg></button>
 <script>
@@ -328,7 +333,8 @@ function show(i){
     b.setAttribute('aria-label','عدّ');
     const upd=()=>{const r=st[k],dn=r===0;a.classList.toggle('done',dn);b.style.setProperty('--p',Math.round((c.n-r)/c.n*100)+'%');b.innerHTML='<span class="in">'+(dn?ic('check'):r)+'</span>'};
     b.onclick=()=>{st[k]=st[k]===0?c.n:st[k]-1;
-      if(st[k]===0){navigator.vibrate&&navigator.vibrate(40);if(autoNext){const j=st.findIndex((v,x)=>x>k&&v!==0);if(j>0){const mine=els;setTimeout(()=>{const t=mine[j];if(t&&t.isConnected)t.scrollIntoView({behavior:'smooth',block:'center'})},350)}}}
+      if(st[k]!==0)fb('tap');
+      else{fb(d.cards.every((_,x)=>st[x]===0)?'fin':'done');if(autoNext){const j=st.findIndex((v,x)=>x>k&&v!==0);if(j>0){const mine=els;setTimeout(()=>{const t=mine[j];if(t&&t.isConnected)t.scrollIntoView({behavior:'smooth',block:'center'})},350)}}}
       S.set(key,st);upd();prog()};
     upd();
     hd.append(no);if(c.n>1)hd.append(el('span','tg','×'+c.n));hd.append(el('span','sp'),cp);
@@ -514,6 +520,65 @@ $('#bl').onclick=openRem;
 setInterval(check,30000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)check()});
 addEventListener('hashchange',()=>{const h=decodeURIComponent(location.hash.slice(1)),i=docs.findIndex(d=>d.slug===h);if(i>=0&&i!==cur)show(i)});
+const FB0={snd:true,vol:6,tone:'soft',vib:true,str:'m',every:true};
+function fbCfg(){return Object.assign({},FB0,S.get('adhkar:fb',{})||{})}
+let AC=null;
+function actx(){try{if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(C)AC=new C()}if(AC&&AC.state==='suspended')AC.resume()}catch(e){}return AC}
+function tone(f1,f2,dur,type,vol,delay){
+  try{
+    const a=actx();if(!a)return;
+    const t=a.currentTime+(delay||0),o=a.createOscillator(),g=a.createGain();
+    o.type=type;o.frequency.setValueAtTime(f1,t);
+    if(f2!==f1)o.frequency.exponentialRampToValueAtTime(f2,t+dur);
+    g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(vol,0.0002),t+0.008);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+dur+0.03);
+  }catch(e){}
+}
+function haptic(n,gap){
+  const h=document.querySelector('.hx');if(!h)return;
+  for(let i=0;i<n;i++)setTimeout(()=>{try{h.click()}catch(e){}},i*gap);
+}
+function fb(kind,force){
+  const c=fbCfg();
+  if(kind==='tap'&&!c.every&&!force)return;
+  const v=c.vol/10;
+  if(c.snd){
+    if(kind==='tap'){
+      if(c.tone==='bead')tone(720,380,.06,'triangle',.5*v);
+      else if(c.tone==='drop')tone(520,980,.08,'sine',.45*v);
+      else tone(880,880,.05,'sine',.4*v);
+    }else if(kind==='done'){
+      tone(660,660,.14,'sine',.45*v);tone(880,880,.2,'sine',.45*v,.12);
+    }else{
+      [523,659,784,1047].forEach((f,i)=>tone(f,f,.22,'sine',.45*v,i*.13));
+    }
+  }
+  if(c.vib){
+    const base={l:10,m:22,s:40}[c.str]||22;
+    if(navigator.vibrate){
+      try{navigator.vibrate(kind==='tap'?base:kind==='done'?[base,50,base]:[base,60,base,60,base*2])}catch(e){}
+    }else haptic(kind==='tap'?1:kind==='done'?2:3,90);
+  }
+}
+function openSet(){
+  const c=fbCfg(),ov=$('#ov');
+  const sel=(k,o)=>'<select data-k="'+k+'">'+o.map(x=>'<option value="'+x[0]+'"'+(c[k]===x[0]?' selected':'')+'>'+x[1]+'</option>').join('')+'</select>';
+  const note=(navigator.vibrate?'الاهتزاز مدعوم في جهازك.':'الآيفون لا يسمح بضبط قوة الاهتزاز، ويعمل اهتزاز خفيف في Safari على iOS 17.4 فأحدث.')+' الصوت يتبع زر الصامت في الجوال.';
+  ov.innerHTML='<div class="sheet"><h3><span>الصوت والاهتزاز</span><button class="x">'+ic('x')+'</button></h3>'
+   +'<div class="rr"><label><input type="checkbox" data-k="snd"'+(c.snd?' checked':'')+'> الصوت</label>'+sel('tone',[['soft','نقرة خفيفة'],['bead','حبّة سبحة'],['drop','قطرة']])+'</div>'
+   +'<div class="rr"><label>مستوى الصوت</label><input type="range" min="1" max="10" step="1" data-k="vol" value="'+c.vol+'"></div>'
+   +'<div class="rr"><label><input type="checkbox" data-k="vib"'+(c.vib?' checked':'')+'> الاهتزاز</label>'+sel('str',[['l','خفيف'],['m','متوسط'],['s','قوي']])+'</div>'
+   +'<div class="rr"><label><input type="checkbox" data-k="every"'+(c.every?' checked':'')+'> عند كل ضغطة</label><small style="color:var(--mut)">وإلا عند الإتمام فقط</small></div>'
+   +'<button class="pbtn" id="ft">تجربة الضغط</button><button class="pbtn" id="fd">تجربة إتمام ذكر</button><button class="pbtn" id="ff">تجربة ختم الأذكار</button>'
+   +'<div class="goal" style="margin-top:14px">'+note+'</div></div>';
+  ov.classList.add('show');
+  const save=()=>{const o={};ov.querySelectorAll('[data-k]').forEach(e=>{const k=e.dataset.k;o[k]=e.type==='checkbox'?e.checked:e.type==='range'?+e.value:e.value});S.set('adhkar:fb',o)};
+  ov.querySelectorAll('[data-k]').forEach(e=>{e.onchange=save;e.oninput=save});
+  ov.querySelector('#ft').onclick=()=>{save();fb('tap',true)};
+  ov.querySelector('#fd').onclick=()=>{save();fb('done')};
+  ov.querySelector('#ff').onclick=()=>{save();fb('fin')};
+}
+try{$('#bs').onclick=openSet}catch(e){}
 visit();
 init();
 })();
